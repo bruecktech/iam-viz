@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    aws-sdk-core (2.1.17)
+      jmespath (~> 1.0)
+    jmespath (1.0.2)
+      multi_json (~> 1.0)
+    multi_json (1.11.2)
+    ruby-graphviz (1.2.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  aws-sdk-core
+  ruby-graphviz
