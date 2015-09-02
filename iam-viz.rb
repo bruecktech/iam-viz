@@ -37,7 +37,18 @@ rroles.each do |role|
     g.add_edges(role[:role_name],policy[:policy_name])
 
     document = JSON.parse(URI.decode(policy[:policy_document]))
-    puts document
+    document['Statement'].each{
+      |s|
+      if s['Resource'].is_a?(Array)
+        s['Resource'].each{
+          |r| g.add_node(r)
+          g.add_edges(policy[:policy_name],r, {label: s['Action'].to_s })
+        }
+      else
+          g.add_node(s['Resource'])
+          g.add_edges(policy[:policy_name],s['Resource'], { label: s['Action'].to_s })
+      end
+    }
   end
 
 #  iam.list_attached_role_policies(role_name: role[:role_name])[:attached_policies].each do |policy|
