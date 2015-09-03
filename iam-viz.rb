@@ -37,25 +37,24 @@ rroles.each do |role|
     g.add_edges(role[:role_name],policy[:policy_name])
 
     document = JSON.parse(URI.decode(policy[:policy_document]))
-    document['Statement'].each{
+    [].push(document['Statement']).flatten.each{
       |s|
-      if s['Resource'].is_a?(Array)
-        s['Resource'].each{
-          |r| g.add_node(r)
-          g.add_edges(policy[:policy_name],r, {label: s['Action'].to_s })
-        }
-      else
-          g.add_node(s['Resource'])
-          g.add_edges(policy[:policy_name],s['Resource'], { label: s['Action'].to_s })
-      end
+      resource = s['Resource'].nil? ? s['NotResource'] : s['Resource']
+      [].push(resource).flatten.each{
+        |r|
+        g.add_node(r)
+        g.add_edges(policy[:policy_name],r, {label: s['Action'].to_s })
+      }
     }
   end
 
-#  iam.list_attached_role_policies(role_name: role[:role_name])[:attached_policies].each do |policy|
-#    g.add_node(policy[:policy_arn])
-#    g.add_edges(role[:role_name],policy[:policy_arn])
-#
-#  end
+  running_policies = config[:role_detail_list].find(Proc.new{{attached_managed_policies:[]}}){ |r| r[:role_name] == role[:role_name]}[:attached_managed_policies]
+
+  running_policies.each{
+    |p|
+    g.add_node(p[:policy_arn])
+    g.add_edges(role[:role_name], p[:policy_arn])
+  }
 end
 
 
