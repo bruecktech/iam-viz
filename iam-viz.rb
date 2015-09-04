@@ -25,6 +25,7 @@ end
 
 g = GraphViz::new( "structs", "type" => "graph" )
 g[:rankdir] = "LR"
+#g[:splines] = "ortho"
 
 config = get_running_config
 
