@@ -33,8 +33,8 @@ rroles.each do |role|
   g.add_node(role[:role_name])
 
   role[:role_policy_list].each do |policy|
-    g.add_node(policy[:policy_name])
-    g.add_edges(role[:role_name],policy[:policy_name])
+    g.add_node("#{role[:role_name]}#{policy[:policy_name]}", {label: policy[:policy_name]})
+    g.add_edges(role[:role_name],"#{role[:role_name]}#{policy[:policy_name]}")
 
     document = JSON.parse(URI.decode(policy[:policy_document]))
     [].push(document['Statement']).flatten.each{
@@ -43,7 +43,7 @@ rroles.each do |role|
       [].push(resource).flatten.each{
         |r|
         g.add_node(r)
-        g.add_edges(policy[:policy_name],r, {label: s['Action'].to_s })
+        g.add_edges("#{role[:role_name]}#{policy[:policy_name]}",r, {label: s['Action'].to_s })
       }
     }
   end
