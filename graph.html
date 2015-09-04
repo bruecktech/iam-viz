@@ -5,36 +5,68 @@
 
     <style type="text/css">
         #mynetwork {
-            width: 600px;
-            height: 400px;
+            width: 100%;
+            height: 100%;
             border: 1px solid lightgray;
         }
     </style>
 </head>
 <body>
+  <input type="file" id="files" name="files[]" multiple />
   <div id="mynetwork"></div>
   <script type="text/javascript">
-    // provide data in the DOT language
-    var DOTstring = 'dinetwork {1 -> 1 -> 2; 2 -> 3; 2 -- 4; 2 -> 1 }';
-    var parsedData = vis.network.convertDot(DOTstring);
+    function drawGraph(DOTstring){
+      // provide data in the DOT language
+      //var DOTstring = 'dinetwork {1 -> 1 -> 2; 2 -> 3; 2 -- 4; 2 -> 1 }';
+      var parsedData = vis.network.convertDot(DOTstring);
 
-    var data = {
-      nodes: parsedData.nodes,
-      edges: parsedData.edges
+      var data = {
+        nodes: parsedData.nodes,
+        edges: parsedData.edges
+      }
+
+      var options = parsedData.options;
+
+      // you can extend the options like a normal JSON variable:
+      options.nodes = {
+        color: 'blue'
+      }
+
+      // create a network
+      var container = document.getElementById('mynetwork');
+
+      // create a network
+      var network = new vis.Network(container, data, options);
+      network.setOptions({layout: {hierarchical:{ enabled:true } }});
+      //network.focus(1,{scale: 1, offset:{x: -(width/3)}});
+      console.log(network.getScale());
+      network.moveTo({scale: 0.2});
+      console.log(network.getScale());
     }
 
-    var options = parsedData.options;
+    function handleFileSelect(evt) {
+      var files = evt.target.files; // FileList object
 
-    // you can extend the options like a normal JSON variable:
-    options.nodes = {
-      color: 'red'
+      // Loop through the FileList
+      for (var i = 0, f; f = files[i]; i++) {
+
+      var reader = new FileReader();
+
+      // Closure to capture the file information.
+      reader.onload = (function(theFile) {
+          return function(e) {
+              drawGraph(e.target.result);
+          };
+      })(f);
+
+      // Read in the file
+      //reader.readAsDataText(f,UTF-8);
+      //reader.readAsDataURL(f);
+
+      reader.readAsText(f);
+      }
     }
-
-    // create a network
-    var container = document.getElementById('mynetwork');
-
-    // create a network
-    var network = new vis.Network(container, data, options);
-  </script>
+    document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    </script>
 </body>
 </html>

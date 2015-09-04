@@ -44,7 +44,7 @@ rroles.each do |role|
       [].push(resource).flatten.each{
         |r|
         g.add_node(r)
-        g.add_edges("#{role[:role_name]}#{policy[:policy_name]}",r, {label: s['Action'].to_s })
+        g.add_edges("#{role[:role_name]}#{policy[:policy_name]}",r, {label: s['Action'].to_s.delete('\\"') })
       }
     }
   end
