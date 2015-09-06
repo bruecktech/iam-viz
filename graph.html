@@ -10,13 +10,16 @@
             border: 1px solid lightgray;
         }
     </style>
+    <script src="graph.js"></script>
 </head>
 <body>
-  <input type="file" id="files" name="files[]" multiple />
   <div id="mynetwork"></div>
   <script type="text/javascript">
     var allNodes;
     var network;
+    var nodesDataSet;
+    var edgesDataSet;
+    var highlightActive = false;
 
     function httpGet(theUrl)
     {
@@ -26,19 +29,12 @@
       return xmlHttp.responseText;
     }
 
-    function drawGraph(DOTstring){
+    function redrawAll(){
       // provide data in the DOT language
       //var DOTstring = 'dinetwork {1 -> 1 -> 2; 2 -> 3; 2 -- 4; 2 -> 1 }';
 
-      var DOTstring = httpGet("/graph.dot");
-      var parsedData = vis.network.convertDot(DOTstring);
-
-      var data = {
-        nodes: parsedData.nodes,
-        edges: parsedData.edges
-      }
-
-      var options = parsedData.options;
+      //var DOTstring = httpGet("/graph.dot");
+      //var parsedData = vis.network.convertDot(DOTstring);
 
       var options = {
         nodes: {
@@ -46,31 +42,43 @@
           color: 'blue',
           scaling: {
             min: 10,
-            max: 30
+            max: 30,
+	    label: {
+              min: 8,
+              max: 30,
+              drawThreshold: 12,
+              maxVisible: 20
+            }
           },
           font: {
             size: 12,
             face: 'Tahoma'
           }
-        }
+        },
+	edges: {
+	  color: {inherit: 'from'}
+	}
       };
+
+      // get a JSON object
+      //edgesDataset = new vis.DataSet(parsedData.edges);
+      //nodesDataset = new vis.DataSet(parsedData.nodes);
+      edgesDataset = new vis.DataSet(edges);
+      nodesDataset = new vis.DataSet(nodes);
+      allNodes = nodesDataset.get({returnType:"Object"});
 
       // create a network
       var container = document.getElementById('mynetwork');
-
-      // create a network
+      var data = {nodes: nodesDataset, edges: edgesDataset};
       network = new vis.Network(container, data, options);
       //network.setOptions({layout: {hierarchical:{ enabled:true } }});
       //network.focus(1,{scale: 1, offset:{x: -(width/3)}});
-
-      // get a JSON object
-      var nodesDataset = new vis.DataSet(data.nodes);
-      allNodes = nodesDataset.get({returnType:"Object"});
 
       network.on("click",neighbourhoodHighlight);
     }
 
     function neighbourhoodHighlight(params) {
+      console.log(params);
       // if something is selected:
       if (params.nodes.length > 0) {
         highlightActive = true;
@@ -168,7 +176,7 @@
     }
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
     **/
-    drawGraph(null);
+    redrawAll();
     </script>
 </body>
 </html>
