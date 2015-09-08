@@ -30,20 +30,13 @@
     }
 
     function redrawAll(){
-      // provide data in the DOT language
-      //var DOTstring = 'dinetwork {1 -> 1 -> 2; 2 -> 3; 2 -- 4; 2 -> 1 }';
-
-      //var DOTstring = httpGet("/graph.dot");
-      //var parsedData = vis.network.convertDot(DOTstring);
-
       var options = {
         nodes: {
           shape: 'dot',
-          color: 'blue',
           scaling: {
             min: 10,
             max: 30,
-	    label: {
+          label: {
               min: 8,
               max: 30,
               drawThreshold: 12,
@@ -55,14 +48,21 @@
             face: 'Tahoma'
           }
         },
-	edges: {
-	  color: {inherit: 'from'}
-	}
+        edges: {
+          width: 0.15,
+          color: {inherit: 'from'},
+          smooth: {
+            type: 'continuous'
+          }
+        },
+        physics: true,
+        interaction: {
+          tooltipDelay: 200,
+          hideEdgesOnDrag: true
+        }
       };
 
       // get a JSON object
-      //edgesDataset = new vis.DataSet(parsedData.edges);
-      //nodesDataset = new vis.DataSet(parsedData.nodes);
       edgesDataset = new vis.DataSet(edges);
       nodesDataset = new vis.DataSet(nodes);
       allNodes = nodesDataset.get({returnType:"Object"});
@@ -71,8 +71,6 @@
       var container = document.getElementById('mynetwork');
       var data = {nodes: nodesDataset, edges: edgesDataset};
       network = new vis.Network(container, data, options);
-      //network.setOptions({layout: {hierarchical:{ enabled:true } }});
-      //network.focus(1,{scale: 1, offset:{x: -(width/3)}});
 
       network.on("click",neighbourhoodHighlight);
     }
@@ -104,9 +102,9 @@
           }
         }
 
-        // all second degree nodes get a different color and their label back
+        // all second degree nodes get their own color and their label back
         for (i = 0; i < allConnectedNodes.length; i++) {
-          allNodes[allConnectedNodes[i]].color = 'rgba(150,150,150,0.75)';
+          allNodes[allConnectedNodes[i]].color = undefined;
           if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
             allNodes[allConnectedNodes[i]].label = allNodes[allConnectedNodes[i]].hiddenLabel;
             allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
@@ -151,31 +149,6 @@
       nodesDataset.update(updateArray);
     }
 
-    /**
-    function handleFileSelect(evt) {
-      var files = evt.target.files; // FileList object
-
-      // Loop through the FileList
-      for (var i = 0, f; f = files[i]; i++) {
-
-      var reader = new FileReader();
-
-      // Closure to capture the file information.
-      reader.onload = (function(theFile) {
-          return function(e) {
-              drawGraph(e.target.result);
-          };
-      })(f);
-
-      // Read in the file
-      //reader.readAsDataText(f,UTF-8);
-      //reader.readAsDataURL(f);
-
-      reader.readAsText(f);
-      }
-    }
-    document.getElementById('files').addEventListener('change', handleFileSelect, false);
-    **/
     redrawAll();
     </script>
 </body>

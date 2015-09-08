@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'ruby-graphviz'
 require 'aws-sdk-core'
 require 'uri'
 
@@ -23,10 +22,6 @@ def get_running_config
   config
 end
 
-g = GraphViz::new( "structs", "type" => "graph" )
-g[:rankdir] = "LR"
-#g[:splines] = "ortho"
-
 nodes = []
 edges = []
 
@@ -34,14 +29,11 @@ config = get_running_config
 
 rroles = config[:role_detail_list]
 rroles.each do |role|
-  nodes << { id: role[:role_name], label: role[:role_name] }
-  g.add_node(role[:role_name])
+  nodes << { id: role[:role_name], group: 'roles', label: role[:role_name] } unless nodes.find{ |n| n[:id] == role[:role_name] }
 
   role[:role_policy_list].each do |policy|
-    nodes << { id: "#{role[:role_name]}#{policy[:policy_name]}", label: policy[:policy_name] }
-    g.add_node("#{role[:role_name]}#{policy[:policy_name]}", {label: policy[:policy_name]})
-    edges << { from: role[:role_name], to: "#{role[:role_name]}#{policy[:policy_name]}" }
-    g.add_edges(role[:role_name],"#{role[:role_name]}#{policy[:policy_name]}")
+    nodes << { id: "#{role[:role_name]}#{policy[:policy_name]}", group:'role_policies', label: policy[:policy_name] } unless nodes.find{ |n| n[:id] == "#{role[:role_name]}#{policy[:policy_name]}" }
+    edges << { from: role[:role_name], to: "#{role[:role_name]}#{policy[:policy_name]}" } unless edges.find{ |e| e[:from] == role[:role_name] && e[:to] == "#{role[:role_name]}#{policy[:policy_name]}" }
 
     document = JSON.parse(URI.decode(policy[:policy_document]))
     [].push(document['Statement']).flatten.each{
@@ -49,10 +41,8 @@ rroles.each do |role|
       resource = s['Resource'].nil? ? s['NotResource'] : s['Resource']
       [].push(resource).flatten.each{
         |r|
-        nodes << { id: r, label: r }
-        g.add_node(r)
-        edges << { from:"#{role[:role_name]}#{policy[:policy_name]}", to: r }
-        g.add_edges("#{role[:role_name]}#{policy[:policy_name]}",r, {label: s['Action'].to_s.delete('\\"') })
+        nodes << { id: r, group: 'policies', label: r } unless nodes.find{ |n| n[:id] == r }
+        edges << { from:"#{role[:role_name]}#{policy[:policy_name]}", to: r } unless edges.find{ |e| e[:from] == "#{role[:role_name]}#{policy[:policy_name]}" && e[:to] == r }
       }
     }
   end
@@ -61,13 +51,9 @@ rroles.each do |role|
 
   running_policies.each{
     |p|
-    nodes << { id: p[:policy_arn], label: p[:policy_arn] }
-    g.add_node(p[:policy_arn])
-    edges << { from: role[:role_name], to: p[:policy_arn] }
-    g.add_edges(role[:role_name], p[:policy_arn])
+    nodes << { id: p[:policy_arn], label: p[:policy_arn] } unless nodes.find{ |n| n[:id] == p[:policy_arn] }
+    edges << { from: role[:role_name], to: p[:policy_arn] } unless edges.find{ |e| e[:from] == role[:role_name] && e[:to] == p[:policy_arn] }
   }
 end
 
 File.open('graph.js', 'w') { |file| file.write("var nodes=#{nodes.to_json}; var edges=#{edges.to_json};") }
-g.output(dot: 'graph.dot')
-
