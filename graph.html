@@ -76,13 +76,19 @@
     }
 
     function neighbourhoodHighlight(params) {
-      console.log(params);
       // if something is selected:
       if (params.nodes.length > 0) {
         highlightActive = true;
         var i,j;
         var selectedNode = params.nodes[0];
-        var degrees = 2;
+        var degrees;
+        if(allNodes[selectedNode].group == 'roles' || allNodes[selectedNode].group == 'resources' ){
+          degrees = 2;
+        } else if(allNodes[selectedNode].group == 'policies' || allNodes[selectedNode].group == 'role_policies'){
+          degrees = 1;
+        } else {
+          degrees = 1;
+        }
 
         // mark all nodes as hard to read.
         for (var nodeId in allNodes) {

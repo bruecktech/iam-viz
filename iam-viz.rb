@@ -32,16 +32,15 @@ rroles.each do |role|
   nodes << { id: role[:role_name], group: 'roles', label: role[:role_name] } unless nodes.find{ |n| n[:id] == role[:role_name] }
 
   role[:role_policy_list].each do |policy|
-    nodes << { id: "#{role[:role_name]}#{policy[:policy_name]}", group:'role_policies', label: policy[:policy_name] } unless nodes.find{ |n| n[:id] == "#{role[:role_name]}#{policy[:policy_name]}" }
-    edges << { from: role[:role_name], to: "#{role[:role_name]}#{policy[:policy_name]}" } unless edges.find{ |e| e[:from] == role[:role_name] && e[:to] == "#{role[:role_name]}#{policy[:policy_name]}" }
-
     document = JSON.parse(URI.decode(policy[:policy_document]))
+    nodes << { id: "#{role[:role_name]}#{policy[:policy_name]}", group:'role_policies', label: policy[:policy_name], title: "<pre>#{JSON.pretty_generate(document)}</pre>" } unless nodes.find{ |n| n[:id] == "#{role[:role_name]}#{policy[:policy_name]}" }
+    edges << { from: role[:role_name], to: "#{role[:role_name]}#{policy[:policy_name]}" } unless edges.find{ |e| e[:from] == role[:role_name] && e[:to] == "#{role[:role_name]}#{policy[:policy_name]}" }
     [].push(document['Statement']).flatten.each{
       |s|
       resource = s['Resource'].nil? ? s['NotResource'] : s['Resource']
       [].push(resource).flatten.each{
         |r|
-        nodes << { id: r, group: 'policies', label: r } unless nodes.find{ |n| n[:id] == r }
+        nodes << { id: r, group: 'resources', label: r } unless nodes.find{ |n| n[:id] == r }
         edges << { from:"#{role[:role_name]}#{policy[:policy_name]}", to: r } unless edges.find{ |e| e[:from] == "#{role[:role_name]}#{policy[:policy_name]}" && e[:to] == r }
       }
     }
@@ -51,7 +50,7 @@ rroles.each do |role|
 
   running_policies.each{
     |p|
-    nodes << { id: p[:policy_arn], label: p[:policy_arn] } unless nodes.find{ |n| n[:id] == p[:policy_arn] }
+    nodes << { id: p[:policy_arn], group: 'policies', label: p[:policy_arn] } unless nodes.find{ |n| n[:id] == p[:policy_arn] }
     edges << { from: role[:role_name], to: p[:policy_arn] } unless edges.find{ |e| e[:from] == role[:role_name] && e[:to] == p[:policy_arn] }
   }
 end
