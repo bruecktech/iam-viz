@@ -13,6 +13,7 @@
     <script src="graph.js"></script>
 </head>
 <body>
+  <input type="text" id="searchbox" />
   <div id="mynetwork"></div>
   <script type="text/javascript">
     var allNodes;
@@ -20,6 +21,23 @@
     var nodesDataSet;
     var edgesDataSet;
     var highlightActive = false;
+
+    var elem = document.getElementById("searchbox");
+    elem.addEventListener("change", findNode);
+
+    function findNode(){
+      var text = document.getElementById('searchbox').value;
+      var re = new RegExp(".*" + text + ".*");
+      greyOutAll();
+      hideAllLabels();
+      for(var nodeId in allNodes){
+        if(nodeId.match(re)){
+          allNodes[nodeId].color = undefined;
+          displayLabels(Array(nodeId));
+        }
+      }
+      updateDataset();
+    }
 
     function httpGet(theUrl)
     {
@@ -90,48 +108,36 @@
           degrees = 1;
         }
 
-        // mark all nodes as hard to read.
-        for (var nodeId in allNodes) {
-          allNodes[nodeId].color = 'rgba(200,200,200,0.5)';
-          if (allNodes[nodeId].hiddenLabel === undefined) {
-            allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
-            allNodes[nodeId].label = undefined;
-          }
-        }
+        greyOutAll();
+        hideAllLabels();
+
         var connectedNodes = network.getConnectedNodes(selectedNode);
         var allConnectedNodes = [];
 
         // get the second degree nodes
         for (i = 1; i < degrees; i++) {
           for (j = 0; j < connectedNodes.length; j++) {
-            allConnectedNodes = allConnectedNodes.concat(network.getConnectedNodes(connectedNodes[j]));
+            allConnectedNodes = allConnectedNodes.concat(network.getConnectedNodes(connectedNodes[j]).filter(function(node){
+              return allNodes[node].group != allNodes[selectedNode].group;
+            }));
           }
         }
 
         // all second degree nodes get their own color and their label back
+        displayLabels(allConnectedNodes);
         for (i = 0; i < allConnectedNodes.length; i++) {
           allNodes[allConnectedNodes[i]].color = undefined;
-          if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
-            allNodes[allConnectedNodes[i]].label = allNodes[allConnectedNodes[i]].hiddenLabel;
-            allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
-          }
         }
 
         // all first degree nodes get their own color and their label back
+        displayLabels(connectedNodes);
         for (i = 0; i < connectedNodes.length; i++) {
           allNodes[connectedNodes[i]].color = undefined;
-          if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
-            allNodes[connectedNodes[i]].label = allNodes[connectedNodes[i]].hiddenLabel;
-            allNodes[connectedNodes[i]].hiddenLabel = undefined;
-          }
         }
 
         // the main node gets its own color and its label back.
         allNodes[selectedNode].color = undefined;
-        if (allNodes[selectedNode].hiddenLabel !== undefined) {
-          allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
-          allNodes[selectedNode].hiddenLabel = undefined;
-        }
+        displayLabels(Array(selectedNode));
       }
       else if (highlightActive === true) {
         // reset all nodes
@@ -144,7 +150,10 @@
         }
         highlightActive = false
       }
+      updateDataset();
+    }
 
+    function updateDataset(){
       // transform the object into an array
       var updateArray = [];
       for (nodeId in allNodes) {
@@ -153,6 +162,33 @@
         }
       }
       nodesDataset.update(updateArray);
+    }
+
+    function greyOutAll(){
+      // mark all nodes as hard to read.
+      for (var nodeId in allNodes) {
+        allNodes[nodeId].color = 'rgba(200,200,200,0.5)';
+      }
+    }
+
+    function hideAllLabels(){
+      // mark all nodes as hard to read.
+      for (var nodeId in allNodes) {
+        if (allNodes[nodeId].hiddenLabel === undefined) {
+          allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+          allNodes[nodeId].label = undefined;
+        }
+      }
+    }
+
+    function displayLabels(nodes){
+      // all first degree nodes get their own color and their label back
+      for (i = 0; i < nodes.length; i++) {
+        if (allNodes[nodes[i]].hiddenLabel !== undefined) {
+          allNodes[nodes[i]].label = allNodes[nodes[i]].hiddenLabel;
+          allNodes[nodes[i]].hiddenLabel = undefined;
+        }
+      }
     }
 
     redrawAll();
