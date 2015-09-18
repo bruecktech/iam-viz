@@ -2,3 +2,4 @@ graph.dot
 graph.js
 vendor/
 .bundle
+config.yaml

@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    awesome_print (1.6.1)
     aws-sdk-core (2.1.17)
       jmespath (~> 1.0)
     jmespath (1.0.2)
@@ -12,5 +13,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  awesome_print
   aws-sdk-core
   ruby-graphviz
